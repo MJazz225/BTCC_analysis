@@ -21,7 +21,7 @@ library(openxlsx)
 
 ############################################### 設定參數 ############################################################################
 
-profit <- 500 #篩選客戶盈利
+profit <- 1000 #篩選客戶盈利
 
 ############################################### 載入交易報表 ############################################################################
 
@@ -102,6 +102,8 @@ data1 <- cbind(data1[,c(1:9)],SUM,data1[,c(10:12)])
 data1 <- data1[nrow(data1):1,] #因為資料是時間倒敘
 rm(SUM)
 
+############################################### 計算產品盈利 ############################################################################
+
 list_data1 <- split(data1, f = data1$交易對tradePair)
 sum_symbol <- NULL
 
@@ -120,7 +122,7 @@ sum_symbol <- sum_symbol[order(sum_symbol[,2], decreasing = T),]
 
 total_sum <- sum(sum_symbol[,2])
 total_sum <- c("Total", total_sum)
-sum_symbol <- sum_symbol[sum_symbol[,2]>100,]
+sum_symbol <- sum_symbol[sum_symbol[,2]>0,]
 sum_symbol <- rbind(sum_symbol, total_sum)
 
 
@@ -325,9 +327,17 @@ data_report <- cbind(data_report[,c(1:4)],ROI_3month,data_report[,5],profit_now)
 colnames(data_report) <- c("ID","值班盈利", "三個月盈利", "存款","3month ROI","浮動盈虧", "floating+3個月盈利")
 data_report1 <- data_report[data_report[,5]>0,]
 data_report1 <- data_report1[order(data_report1$`3month ROI`, decreasing = T ),]
+
+data_high_return <- readxl::read_excel("BTCC關注名單.xlsx")
+data_high_return <- data_high_return[,c(3,1)]
+
+colnames(data_high_return) <- c("ID","風險等級")
+merged_data <- merge(data_report1, data_high_return, by = "ID", all.x = T)
+data_report1 <- merged_data
+data_report1 <- data_report1[order(data_report1$`3month ROI`, decreasing = T ),]
+
 file_path1 <- "D:\\Users\\marshaw.tan\\Downloads\\BTCC_值班客戶盈利.xlsx"
 #file_path <- setwd("C:\\Users\\user\\Downloads\\Telegram Desktopfilter_tradingcount_scalp.xlsx") #HOME
-
 write.xlsx(data_report1, file_path1, digits = 2)
 "已經下載好BTCC總和報表"
 
